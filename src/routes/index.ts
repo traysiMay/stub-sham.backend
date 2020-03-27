@@ -26,10 +26,12 @@ routes.get("/initShows", async (req, res) => {
   try {
     const showRepo = getRepository(Shows);
     const lastShow = await showRepo.findOne({ order: { id: "DESC" } });
-    const diff = timeDiffMins(lastShow.created_at);
-    if (diff > 60) {
-      sale = undefined;
-      picked = false;
+    if (sale === "running") {
+      const diff = timeDiffMins(lastShow.created_at);
+      if (diff > 60) {
+        sale = undefined;
+        picked = false;
+      }
     }
   } catch (e) {
     console.log(e);
