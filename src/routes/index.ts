@@ -1,7 +1,14 @@
 import { Router } from "express";
 import { getRepository } from "typeorm";
 import { Shows } from "../entity/Show";
-import { addDays, search, randomVenue, randomArtist, setToken } from "../utils";
+import {
+  addDays,
+  search,
+  randomVenue,
+  randomArtist,
+  setToken,
+  timeDiffMins
+} from "../utils";
 import { Artists } from "../entity/Artist";
 import { ws } from "..";
 
@@ -14,12 +21,23 @@ let searchResults = {
 const routes = Router();
 
 routes.get("/initShows", async (req, res) => {
+  console.log(req.session.creator, sale);
   if (req.session.creator) {
     return res.send({ status: "creator" });
   }
+  try {
+    const showRepo = getRepository(Shows);
+    const lastShow = await showRepo.findOne({ order: { id: "DESC" } });
+    const diff = timeDiffMins(lastShow.created_at);
+    console.log(diff);
+    if (diff > 60) {
+      sale = undefined;
+    }
+  } catch (e) {
+    console.log(e);
+  }
   switch (sale) {
     case undefined:
-      console.log("init sale");
       setTimeout(async () => {
         if (sale === "running") return;
         const rArtist = await randomArtist();
@@ -36,7 +54,7 @@ routes.get("/initShows", async (req, res) => {
         await showRepo.save(newShow);
 
         sale = "running";
-        req.session.destroy(console.log);
+        req.session.destroy(() => {});
         ws.local.emit("start", {
           onsale: [{ ...newShow, artist: rArtist.name, img: rArtist.img }],
           status: "running"
@@ -98,11 +116,11 @@ routes.post("/pick", async (req, res) => {
   newShow.venue = randomVenue();
   await showRepo.save(newShow);
 
-  sale = "running";
+  sale = "waiting";
   req.session.destroy(() => {});
   ws.local.emit("start", {
     onsale: [{ ...newShow, artist: newArtist.name, img: newArtist.img }],
-    status: "running"
+    status: "waiter"
   });
 });
 

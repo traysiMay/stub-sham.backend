@@ -15,8 +15,11 @@ export class Shows {
   @Column()
   venue: string;
 
-  @Column("timestamp", { default: new Date() })
+  @Column("timestamp with time zone", { default: new Date() })
   date: Date;
+
+  @Column("timestamp with time zone", { default: new Date() })
+  created_at: Date;
 
   @Column()
   price: string;
