@@ -23,9 +23,6 @@ let searchResults = {
 const routes = Router();
 
 routes.get("/initShows", async (req, res) => {
-  if (req.session.creator) {
-    return res.send({ status: "creator" });
-  }
   try {
     const showRepo = getRepository(Shows);
     const lastShow = await showRepo.findOne({ order: { id: "DESC" } });
@@ -55,14 +52,12 @@ routes.get("/initShows", async (req, res) => {
         await showRepo.save(newShow);
 
         sale = "running";
-        req.session.destroy(() => {});
         ws.local.emit("start", {
           onsale: [{ ...newShow, artist: rArtist.name, img: rArtist.img }],
           status: "running"
         });
       }, 5 * 60 * 1000);
       sale = "waiting";
-      req.session.creator = true;
       return res.send({ status: "creator" });
     case "waiting":
       return res.send({ status: "waiter" });
@@ -118,7 +113,6 @@ routes.post("/pick", async (req, res) => {
   await showRepo.save(newShow);
   picked = true;
   sale = "waiting";
-  req.session.destroy(() => {});
   ws.local.emit("start", {
     onsale: [{ ...newShow, artist: newArtist.name, img: newArtist.img }],
     status: "waiter"
