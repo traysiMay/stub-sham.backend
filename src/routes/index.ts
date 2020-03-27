@@ -5,14 +5,16 @@ import {
   addDays,
   search,
   randomVenue,
-  randomArtist,
   setToken,
-  timeDiffMins
+  timeDiffMins,
+  getLastArtist,
+  randomArtist
 } from "../utils";
 import { Artists } from "../entity/Artist";
 import { ws } from "..";
 
 let sale = "running";
+let picked = false;
 let searchResults = {
   artists: {
     items: [{ id: "teemo", name: "teemo", images: [] }]
@@ -30,6 +32,7 @@ routes.get("/initShows", async (req, res) => {
     const diff = timeDiffMins(lastShow.created_at);
     if (diff > 60) {
       sale = undefined;
+      picked = false;
     }
   } catch (e) {
     console.log(e);
@@ -38,7 +41,7 @@ routes.get("/initShows", async (req, res) => {
     case undefined:
       setTimeout(async () => {
         if (sale === "running") return;
-        const rArtist = await randomArtist();
+        const rArtist = picked ? await getLastArtist() : await randomArtist();
         const showRepo = getRepository(Shows);
         const newShow = new Shows();
         newShow.artists = rArtist;
@@ -113,7 +116,7 @@ routes.post("/pick", async (req, res) => {
   newShow.price = `${Math.floor(Math.random() * 100)}.00`;
   newShow.venue = randomVenue();
   await showRepo.save(newShow);
-
+  picked = true;
   sale = "waiting";
   req.session.destroy(() => {});
   ws.local.emit("start", {

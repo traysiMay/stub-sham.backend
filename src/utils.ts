@@ -47,6 +47,12 @@ export const randomArtist = async () => {
   return artists[Math.floor(Math.random() * artists.length)];
 };
 
+export const getLastArtist = async () => {
+  const artistRepo = getRepository(Artists);
+  const artist = await artistRepo.findOne({ order: { id: "DESC" } });
+  return artist;
+};
+
 export const addDays = function(d, days) {
   var date = new Date(d.valueOf());
   date.setDate(date.getDate() + days);
