@@ -12,7 +12,7 @@ import {
 import { Artists } from "../entity/Artist";
 import { ws } from "..";
 
-let sale = undefined;
+let sale = "running";
 let searchResults = {
   artists: {
     items: [{ id: "teemo", name: "teemo", images: [] }]
@@ -21,7 +21,6 @@ let searchResults = {
 const routes = Router();
 
 routes.get("/initShows", async (req, res) => {
-  console.log(req.session.creator, sale);
   if (req.session.creator) {
     return res.send({ status: "creator" });
   }
@@ -29,7 +28,6 @@ routes.get("/initShows", async (req, res) => {
     const showRepo = getRepository(Shows);
     const lastShow = await showRepo.findOne({ order: { id: "DESC" } });
     const diff = timeDiffMins(lastShow.created_at);
-    console.log(diff);
     if (diff > 60) {
       sale = undefined;
     }

@@ -56,6 +56,5 @@ export const addDays = function(d, days) {
 export const timeDiffMins = (showDate: Date) => {
   const currentTime = new Date();
   const timeDiff = (currentTime as any) - (showDate as any);
-  console.log(showDate, currentTime);
   return timeDiff / 1000 / 60;
 };
