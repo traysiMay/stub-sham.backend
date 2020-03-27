@@ -13,7 +13,7 @@ import {
 import { Artists } from "../entity/Artist";
 import { ws } from "..";
 
-let sale = "running";
+let sale = undefined;
 let picked = false;
 let searchResults = {
   artists: {
