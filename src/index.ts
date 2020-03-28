@@ -20,7 +20,9 @@ import { setToken } from "./utils";
 
 const app = express();
 app.use(session({ secret: "DOGSHIT" }));
-
+app.locals.lastCreator = null;
+app.locals.sale = undefined;
+app.locals.picked = false;
 const server = http.createServer(app);
 export const ws = io(server);
 

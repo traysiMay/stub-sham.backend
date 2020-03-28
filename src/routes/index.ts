@@ -13,8 +13,6 @@ import {
 import { Artists } from "../entity/Artist";
 import { ws } from "..";
 
-let sale = undefined;
-let picked = false;
 let searchResults = {
   artists: {
     items: [{ id: "teemo", name: "teemo", images: [] }]
@@ -26,21 +24,28 @@ routes.get("/initShows", async (req, res) => {
   try {
     const showRepo = getRepository(Shows);
     const lastShow = await showRepo.findOne({ order: { id: "DESC" } });
-    if (sale === "running") {
+    if (req.app.locals.sale === "running") {
       const diff = timeDiffMins(lastShow.created_at);
       if (diff > 60) {
-        sale = undefined;
-        picked = false;
+        req.app.locals.sale = undefined;
+        req.app.locals.picked = false;
       }
     }
   } catch (e) {
     console.log(e);
   }
-  switch (sale) {
+  if (req.app.locals.sale === "waiting") {
+    if (Date.now() - req.app.locals.lastCreator > 5 * 60 * 1000) {
+      req.app.locals.sale = "running";
+    }
+  }
+
+  switch (req.app.locals.sale) {
     case undefined:
       setTimeout(async () => {
-        console.log("cream");
-        const rArtist = picked ? await getLastArtist() : await randomArtist();
+        const rArtist = req.app.locals.picked
+          ? await getLastArtist()
+          : await randomArtist();
         const showRepo = getRepository(Shows);
         const newShow = new Shows();
         newShow.artists = rArtist;
@@ -54,13 +59,14 @@ routes.get("/initShows", async (req, res) => {
         newShow.created_at = new Date();
         await showRepo.save(newShow);
 
-        sale = "running";
+        req.app.locals.sale = "running";
         ws.local.emit("start", {
           onsale: [{ ...newShow, artist: rArtist.name, img: rArtist.img }],
           status: "running"
         });
       }, 5 * 60 * 1000);
-      sale = "waiting";
+      req.app.locals.sale = "waiting";
+      req.app.locals.lastCreator = new Date();
       return res.send({ status: "creator" });
     case "waiting":
       return res.send({ status: "waiter" });
@@ -84,8 +90,16 @@ routes.post("/search", async (req, res) => {
   res.send(results);
 });
 
+routes.get("/check", async (req, res) => {
+  return res.send({
+    sale: req.app.locals.sale,
+    picked: req.app.locals.picked,
+    lastCreator: req.app.locals.lastCreator
+  });
+});
+
 routes.get("/reset", async (req, res) => {
-  sale = undefined;
+  req.app.locals.sale = undefined;
 });
 routes.get("/new_token", async (req, res) => {
   await setToken();
@@ -102,8 +116,8 @@ routes.post("/pick", async (req, res) => {
   newArtist.name = artist.name;
   newArtist.img = artist.images[0] ? artist.images[0].url : null;
   await artistRepo.save(newArtist);
-  picked = true;
-  sale = "waiting";
+  req.app.locals.picked = true;
+  req.app.locals.sale = "waiting";
   ws.local.emit("start", {
     onsale: [
       {
