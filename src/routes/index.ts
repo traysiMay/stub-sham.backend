@@ -39,7 +39,7 @@ routes.get("/initShows", async (req, res) => {
   switch (sale) {
     case undefined:
       setTimeout(async () => {
-        if (sale === "running") return;
+        console.log("cream");
         const rArtist = picked ? await getLastArtist() : await randomArtist();
         const showRepo = getRepository(Shows);
         const newShow = new Shows();
@@ -51,6 +51,7 @@ routes.get("/initShows", async (req, res) => {
         newShow.date = tomorrow;
         newShow.price = `${Math.floor(Math.random() * 100)}.00`;
         newShow.venue = randomVenue();
+        newShow.created_at = new Date();
         await showRepo.save(newShow);
 
         sale = "running";
@@ -101,22 +102,16 @@ routes.post("/pick", async (req, res) => {
   newArtist.name = artist.name;
   newArtist.img = artist.images[0] ? artist.images[0].url : null;
   await artistRepo.save(newArtist);
-  // newArtist.venue = randomVenue();
-  const showRepo = getRepository(Shows);
-  const newShow = new Shows();
-  newShow.artists = newArtist;
-  const event = new Date();
-  event.setHours(16);
-  event.setMinutes(20);
-  const tomorrow = addDays(event, 1);
-  newShow.date = tomorrow;
-  newShow.price = `${Math.floor(Math.random() * 100)}.00`;
-  newShow.venue = randomVenue();
-  await showRepo.save(newShow);
   picked = true;
   sale = "waiting";
   ws.local.emit("start", {
-    onsale: [{ ...newShow, artist: newArtist.name, img: newArtist.img }],
+    onsale: [
+      {
+        // ...newShow,
+        artist: newArtist.name,
+        img: newArtist.img
+      }
+    ],
     status: "waiter"
   });
 });
