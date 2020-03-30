@@ -26,7 +26,7 @@ routes.get("/initShows", async (req, res) => {
     const lastShow = await showRepo.findOne({ order: { id: "DESC" } });
     if (req.app.locals.sale === "running") {
       const diff = timeDiffMins(lastShow.created_at);
-      if (diff > 600000) {
+      if (diff > 60) {
         req.app.locals.sale = undefined;
         req.app.locals.picked = false;
       }
