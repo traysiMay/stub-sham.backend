@@ -24,6 +24,9 @@ export class Shows {
   @Column()
   price: string;
 
+  @Column({ default: 0 })
+  sold_count: number;
+
   @ManyToOne(type => Artists)
   @JoinColumn({ name: "artists_id" })
   artists: Artists;

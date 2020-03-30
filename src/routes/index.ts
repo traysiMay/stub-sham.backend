@@ -26,7 +26,7 @@ routes.get("/initShows", async (req, res) => {
     const lastShow = await showRepo.findOne({ order: { id: "DESC" } });
     if (req.app.locals.sale === "running") {
       const diff = timeDiffMins(lastShow.created_at);
-      if (diff > 60) {
+      if (diff > 600000) {
         req.app.locals.sale = undefined;
         req.app.locals.picked = false;
       }
@@ -88,6 +88,23 @@ routes.post("/search", async (req, res) => {
   const results = await search(req.body.artist);
   searchResults = results;
   res.send(results);
+});
+
+routes.post("/check_sold", async (req, res) => {
+  const { id } = req.body;
+  const showRepo = getRepository(Shows);
+  const show = await showRepo.findOne({ id });
+  return res.send({ count: show.sold_count });
+});
+
+routes.post("/add_sold", async (req, res) => {
+  const { id } = req.body;
+  const showRepo = getRepository(Shows);
+  const shows = await showRepo.findOne({ id });
+  shows.sold_count += 1;
+  showRepo.save(shows);
+  console.log(shows.sold_count);
+  return res.send({ status: "success" });
 });
 
 routes.get("/check", async (req, res) => {
