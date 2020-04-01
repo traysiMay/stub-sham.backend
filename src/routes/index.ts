@@ -84,6 +84,7 @@ routes.get("/initShows", async (req, res) => {
       });
   }
 });
+
 routes.post("/search", async (req, res) => {
   const results = await search(req.body.artist);
   searchResults = results;
@@ -103,7 +104,6 @@ routes.post("/add_sold", async (req, res) => {
   const shows = await showRepo.findOne({ id });
   shows.sold_count += 1;
   showRepo.save(shows);
-  console.log(shows.sold_count);
   return res.send({ status: "success" });
 });
 
@@ -118,6 +118,7 @@ routes.get("/check", async (req, res) => {
 routes.get("/reset", async (req, res) => {
   req.app.locals.sale = undefined;
 });
+
 routes.get("/new_token", async (req, res) => {
   await setToken();
   return res.send({ message: "new_token" });
